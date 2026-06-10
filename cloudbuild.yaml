@@ -34,3 +34,7 @@ artifacts:
     location: 'gs://${_OUTPUT_BUCKET}/'
     paths:
       - '*-output.txt'
+
+# Required when using a custom Service Account
+options:
+  logging: CLOUD_LOGGING_ONLY
