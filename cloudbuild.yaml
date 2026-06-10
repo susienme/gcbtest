@@ -1,0 +1,36 @@
+substitutions:
+  _OUTPUT_BUCKET: 'gcb_test'
+
+steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -xeuo pipefail
+
+        # 1. Get current timestamp
+        TIMESTAMP=$$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+        # 2. Get commit hash from local repository
+        HASH=$$(git rev-parse HEAD 2>/dev/null || echo "000000")
+        
+        # 3. Get the first 6 hex digits of the hash
+        SHORT_HASH="$${HASH:0:6}"
+
+        # 4. Read the contents of input.txt
+        INPUT_CONTENT=$$(cat input.txt)
+
+        # 5. Create the output file with the requested format
+        OUTPUT_FILE="$${SHORT_HASH}-output.txt"
+        echo "$${TIMESTAMP} $${HASH} $${INPUT_CONTENT}" > "$${OUTPUT_FILE}"
+        
+        echo "Successfully generated $${OUTPUT_FILE} with content:"
+        cat "$${OUTPUT_FILE}"
+
+# Automatically upload any matching output file to the GCS bucket
+artifacts:
+  objects:
+    location: 'gs://${_OUTPUT_BUCKET}/'
+    paths:
+      - '*-output.txt'
