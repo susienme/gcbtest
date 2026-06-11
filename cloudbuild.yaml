@@ -39,7 +39,7 @@ steps:
 
         echo "Publishing Pub/Sub message to topic ${_TRIGGER_TOPIC} using Flow ID ${_FLOW_ID}..."
         gcloud pubsub topics publish "projects/${_PROJECT_ID}/topics/${_TRIGGER_TOPIC}" \
-            --message='{"flow": "${_FLOW_ID}", "parameters": {"_OVERWRITE_REF_SHA": "${SHORT_SHA}"}, "gitParameters": {"commitSha": "${SHORT_SHA}"}}'
+            --message='{"flow": "${_FLOW_ID}", "userParameters": {"_OVERWRITE_REF_SHA": "${SHORT_SHA}"}, "gitParameters": {"commitSha": "${SHORT_SHA}"}}'
 
 # Automatically upload any matching output file to the GCS bucket
 artifacts:
