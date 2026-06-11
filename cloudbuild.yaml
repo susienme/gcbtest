@@ -1,7 +1,12 @@
 substitutions:
   _OUTPUT_BUCKET: 'gcb_test'
+  _TRIGGER_TOPIC: 'hit_the_gas' # TODO: Replace with your actual target Pub/Sub topic name
+  _PROJECT_ID: 'mhyun-test-project2'
+  _OUTPUT_IMAGE_SUFFIX: ''
+  _OUTPUT_IMAGE_FAMILY: ''
 
 steps:
+  # --- Step 1: Generate timestamp, SHA files, and local output file ---
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
     entrypoint: 'bash'
     args:
@@ -12,21 +17,42 @@ steps:
         # 1. Get current timestamp
         TIMESTAMP=$$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-        # 2. Get commit hash from local repository
-        HASH=$$(git rev-parse HEAD 2>/dev/null || echo "000000")
-        
-        # 3. Get the first 6 hex digits of the hash
-        SHORT_HASH="$${HASH:0:6}"
+        # 2. Extract commit SHA (Seamlessly matches Louhi env vars, Louhi user substitutions, or local Git fallback)
+        #LOUHI_REF_SHA="$${LOUHI_REF_SHA:-$$(git rev-parse HEAD 2>/dev/null || echo "0000000000")}"
+
+        # 3. Compute exactly our requested length hashes
+        #SHORT_HASH="$${LOUHI_REF_SHA:0:6}"
+        #RAW_SHA="$${LOUHI_REF_SHA:0:10}"
+
+        # Save both hashes to shared workspace files so Step 2 reads them exactly identically!
+        #echo "$${SHORT_HASH}" > /workspace/_short_hash.txt
+        #echo "$${RAW_SHA}" > /workspace/_raw_sha.txt
 
         # 4. Read the contents of input.txt
         INPUT_CONTENT=$$(cat input.txt)
 
-        # 5. Create the output file with the requested format
-        OUTPUT_FILE="$${SHORT_HASH}-output.txt"
-        echo "$${TIMESTAMP} $${HASH} $${INPUT_CONTENT}" > "$${OUTPUT_FILE}"
-        
+        # 5. Create the formatted local output file
+        OUTPUT_FILE="${SHORT_SHA}-output.txt"
+        echo "$${TIMESTAMP} ${SHORT_SHA} $${INPUT_CONTENT}" > "$${OUTPUT_FILE}"
+
         echo "Successfully generated $${OUTPUT_FILE} with content:"
         cat "$${OUTPUT_FILE}"
+
+#  # --- Step 2: Publish Pub/Sub Trigger Message ---
+#  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+#    entrypoint: 'bash'
+#    args:
+#      - '-c'
+#      - |
+#        set -xeuo pipefail
+#
+#        # Read the exact identical hashes created in Step 1
+#        SHORT_HASH=$$(cat /workspace/_short_hash.txt)
+#        RAW_SHA=$$(cat /workspace/_raw_sha.txt)
+#
+#        echo "Publishing Pub/Sub message to topic ${_TRIGGER_TOPIC} using Flow ID $${RAW_SHA}..."
+#        gcloud pubsub topics publish "projects/${_PROJECT_ID}/topics/${_TRIGGER_TOPIC}" \
+#            --message="{\"flow\": \"$${RAW_SHA}\", \"parameters\": {\"_OVERWRITE_REF_SHA\": \"$${SHORT_HASH}\"}, \"gitParameters\": {\"commitSha\": \"$${SHORT_HASH}\"}}"
 
 # Automatically upload any matching output file to the GCS bucket
 artifacts:
