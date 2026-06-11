@@ -1,6 +1,6 @@
 substitutions:
   _OUTPUT_BUCKET: 'gcb_test'
-  _TRIGGER_TOPIC: 'hit_the_gas' # TODO: Replace with your actual target Pub/Sub topic name
+  _TRIGGER_TOPIC: 'hit_the_gas'
   _PROJECT_ID: 'mhyun-test-project2'
   _OUTPUT_IMAGE_SUFFIX: ''
   _OUTPUT_IMAGE_FAMILY: ''
@@ -28,21 +28,17 @@ steps:
         cat "$${OUTPUT_FILE}"
         echo ${COMMIT_SHA}
 
-#  # --- Step 2: Publish Pub/Sub Trigger Message ---
-#  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
-#    entrypoint: 'bash'
-#    args:
-#      - '-c'
-#      - |
-#        set -xeuo pipefail
-#
-#        # Read the exact identical hashes created in Step 1
-#        SHORT_HASH=$$(cat /workspace/_short_hash.txt)
-#        RAW_SHA=$$(cat /workspace/_raw_sha.txt)
-#
-#        echo "Publishing Pub/Sub message to topic ${_TRIGGER_TOPIC} using Flow ID $${RAW_SHA}..."
-#        gcloud pubsub topics publish "projects/${_PROJECT_ID}/topics/${_TRIGGER_TOPIC}" \
-#            --message="{\"flow\": \"$${RAW_SHA}\", \"parameters\": {\"_OVERWRITE_REF_SHA\": \"$${SHORT_HASH}\"}, \"gitParameters\": {\"commitSha\": \"$${SHORT_HASH}\"}}"
+  # --- Step 2: Publish Pub/Sub Trigger Message ---
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -xeuo pipefail
+
+        echo "Publishing Pub/Sub message to topic ${_TRIGGER_TOPIC} using Flow ID ${COMMIT_SHA}..."
+        gcloud pubsub topics publish "projects/${_PROJECT_ID}/topics/${_TRIGGER_TOPIC}" \
+            --message="{\"flow\": \"${COMMIT_SHA}\", \"parameters\": {\"_OVERWRITE_REF_SHA\": \"${SHORT_SHA}\"}, \"gitParameters\": {\"commitSha\": \"${SHORT_SHA}\"}}"
 
 # Automatically upload any matching output file to the GCS bucket
 artifacts:
