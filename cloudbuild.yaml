@@ -38,7 +38,23 @@ steps:
         set -xeuo pipefail
 
         echo "Publishing Pub/Sub message to topic ${_TRIGGER_TOPIC} using Flow ID ${_FLOW_ID}..."
-        gcloud pubsub topics publish "projects/${_PROJECT_ID}/topics/${_TRIGGER_TOPIC}" --message='{"flow": "${_FLOW_ID}", "userParameters": {"_OVERWRITE_REF_SHA": "${SHORT_SHA}", "_ASDF": "QWERTY", "_SLEEP": "2"}, "gitParameters": {"commitSha": "${COMMIT_SHA}"}}'
+        gcloud pubsub topics publish "projects/${_PROJECT_ID}/topics/${_TRIGGER_TOPIC}" \
+          --message='{
+            "flow": "${_FLOW_ID}",
+            "userParameters": {
+              "_OVERWRITE_REF_SHA": "${SHORT_SHA}",
+              "_HEAD_BRANCH": "$_HEAD_BRANCH",
+              "_BASE_BRANCH": "$_BASE_BRANCH",
+              "_HEAD_REPO_URL": "$_HEAD_REPO_URL",
+              "_PR_NUMBER": "$_PR_NUMBER",
+              "_ASDF": "QWERTY",
+              "_SLEEP": "2"
+              "_"
+            },
+            "gitParameters": {
+            "commitSha": "${COMMIT_SHA}"
+            }
+          }'
 
 # Automatically upload any matching output file to the GCS bucket
 artifacts:
