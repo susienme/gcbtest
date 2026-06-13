@@ -54,7 +54,7 @@ steps:
               "_PR_NUMBER": "$_PR_NUMBER",
               "_ASDF": "QWERTY",
               "_SLEEP": "2",
-              "_PR_EMAIL": "$${PR_EMAIL}",
+              "_PR_EMAIL": "$${PR_EMAIL}"
             },
             "gitParameters": {
               "commitSha": "${COMMIT_SHA}"
