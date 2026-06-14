@@ -37,7 +37,7 @@ steps:
       - |
         set -xeuo pipefail
 
-        # PR_EMAIL=$(git log -1 --format='%ae' 2>/dev/null || true)
+        PR_EMAIL=$(git log -1 --format='%ae' 2>/dev/null || true)
         if [[ "$${PR_EMAIL}" != *@google.com ]]; then
           PR_EMAIL="noreply@google.com"
         fi
